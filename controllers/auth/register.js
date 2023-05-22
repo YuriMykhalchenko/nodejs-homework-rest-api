@@ -1,7 +1,8 @@
 const bcrypt = require("bcrypt");
 const gravatar = require("gravatar");
 const { User } = require("../../models");
-const { HttpError } = require("../../helpers");
+const { HttpError, sendEmail } = require("../../helpers");
+const { nanoid } = require("nanoid");
 
 const register = async (req, res) => {
   const { email, subscription, password } = req.body;
@@ -9,13 +10,23 @@ const register = async (req, res) => {
   if (user) {
     throw HttpError(
       409,
-      "This user's email has already been in database. Please change email address"
+      "This user's email has already registered. Please change email address"
     );
   }
 
   const avatarURL = gravatar.url(email, { s: "100", r: "x" }, false);
   const hashPassword = await bcrypt.hash(password, 10);
-  await User.create({ ...req.body, password: hashPassword, avatarURL });
+  const verificationToken = nanoid();
+
+  await User.create({
+    ...req.body,
+    password: hashPassword,
+    avatarURL,
+    verificationToken,
+  });
+
+  await sendEmail(email, verificationToken);
+
   return res.status(201).json({ email, subscription });
 };
 
