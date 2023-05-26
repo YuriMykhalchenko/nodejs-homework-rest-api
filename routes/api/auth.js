@@ -27,8 +27,6 @@ router.post(
 
 router.post("/login", validateBody(validationLoginUser), ctrl.login);
 
-router.get("/current", authenticate, ctrl.getCurrentUser);
-
 router.post("/logout", authenticate, ctrl.logout);
 
 router.patch(
